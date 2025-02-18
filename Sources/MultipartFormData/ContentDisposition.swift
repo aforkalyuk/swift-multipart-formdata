@@ -42,7 +42,19 @@ extension ContentDisposition {
     /// - Parameters:
     ///   - name: The value for the `name` parameter.
     ///   - filename: The value for the optional `filename` parameter.
-    public init(uncheckedName name: String, uncheckedFilename filename: String? = nil) throws {
+    ///   - encodeParameters: Flag that allow to enable/disable parameters encoding
+    public init(uncheckedName name: String, uncheckedFilename filename: String? = nil, encodeParameters: Bool = true) throws {
+        guard encodeParameters else {
+            if let filename {
+                parameters = [
+                    HTTPHeaderParameter("name", value: name),
+                    HTTPHeaderParameter("filename", value: filename)
+                ]
+            } else {
+                parameters = [HTTPHeaderParameter("name", value: name)]
+            }
+            return
+        }
         guard let percentEncodedName = name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             throw PercentEncodingError(initialValue: name)
         }
@@ -70,8 +82,9 @@ extension ContentDisposition {
     /// - Parameters:
     ///   - name: The value for the `name` parameter.
     ///   - filename: The value for the optional `filename` parameter.
-    public init(name: StaticString, filename: StaticString? = nil) {
+    ///   - encodeParameters: Flag that allow to enable/disable parameters encoding
+    public init(name: StaticString, filename: StaticString? = nil, encodeParameters: Bool = true) {
         // swiftlint:disable:next force_try
-        try! self.init(uncheckedName: String(name), uncheckedFilename: filename.map { String($0) })
+        try! self.init(uncheckedName: String(name), uncheckedFilename: filename.map { String($0) }, encodeParameters: encodeParameters)
     }
 }
